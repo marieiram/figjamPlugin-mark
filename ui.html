@@ -23,7 +23,9 @@
     <p>テキストを選択して感情分析を実行します。</p>
     
     <button id="analyze-btn">分析を実行</button>
-    
+    <button id="cancel-btn" style="display: none;">キャンセル</button>
+    <button id="clear-btn">クリア</button>
+
     <div id="result" class="result">
       <p>検出結果:</p>
       <p>ポジティブ感情: <span id="positive-count">0</span>個</p>
@@ -35,11 +37,30 @@
     document.getElementById('analyze-btn').onclick = function() {
       // 親ウィンドウにメッセージを送信
       parent.postMessage({ pluginMessage: { type: 'analyze-emotions' } }, '*');
-      
       // ボタンの状態を更新
       this.textContent = '分析中...';
       this.disabled = true;
+      document.getElementById('cancel-btn').style.display = 'inline-block';
     };
+
+    // キャンセルボタンがクリックされたときの処理
+    document.getElementById('cancel-btn').onclick = function() {
+    parent.postMessage({ pluginMessage: { type: 'cancel-analysis' } }, '*');
+    this.style.display = 'none';
+    document.getElementById('analyze-btn').textContent = '分析を実行';
+    document.getElementById('analyze-btn').disabled = false;
+  };
+    // クリアボタンがクリックされたときの処理
+    document.getElementById('clear-btn').onclick = function() {
+    parent.postMessage({ pluginMessage: { type: 'clear-emojis' } }, '*');
+  };
+  window.onmessage = function(event) {
+    const message = event.data.pluginMessage;
+
+    if (message.type === 'emojis-cleared') {
+      alert('絵文字がクリアされました。');
+    }
+  };
     
     // 親からのメッセージを受信
     window.onmessage = function(event) {
@@ -48,6 +69,7 @@
       if (message.type === 'analysis-complete') {
         document.getElementById('analyze-btn').textContent = '分析を実行';
         document.getElementById('analyze-btn').disabled = false;
+        document.getElementById('cancel-btn').style.display = 'none';
         
         // 結果の表示
         document.getElementById('positive-count').textContent = message.count.positive;
@@ -59,6 +81,10 @@
         alert(message.message);
         document.getElementById('analyze-btn').textContent = '分析を実行';
         document.getElementById('analyze-btn').disabled = false;
+        document.getElementById('cancel-btn').style.display = 'none';
       }
+      if (message.type === 'canceled') {
+      alert('分析がキャンセルされました。');
+    }
     };
   </script>
