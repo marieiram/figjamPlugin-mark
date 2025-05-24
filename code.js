@@ -8,15 +8,33 @@ const EMOTION_WORDS = {
 
 //文字を抽出するロジック
 const extractTextNodes = (nodes) => {
+  //テキストを含むノードを格納する配列
   let textNodes = [];
   for (const node of nodes) {
-    if (node.type === 'TEXT') {
+    console.log("ループに入ったよ"+ node.type + node.name+ node.id);
+
+    // ノードがTEXTまたはSTICKYであれば、テキストを抽出
+    // STICKYノードはテキストを持つ場合のみ対象とする
+    if (node.type === 'TEXT' || (node.type === 'STICKY' && node.text) ) {
       textNodes.push(node);
-    } else if (node.type === 'STICKY' && node.text) {
-      textNodes.push(node); // STICKYノードもテキストノードとして扱う
-    } else if (node.type === 'FRAME' || node.type === 'GROUP') {
+      console.log("TEXTを見つけたぜ: " + textNodes);
+      console.log(node.text)
+    }
+    //shape_with_textノードの場合
+    // else if (node.type === 'SHAPE_WITH_TEXT') {
+    //   console.log("SHAPE_WITH_TEXTノードのテキスト: " + node.text.characters);
+    //   textNodes.push(node);
+    // }
+    
+    //sectionやgroupノードの場合
+     else if (node.type === 'SECTION' || node.type === 'GROUP') {
       // 子ノードを再帰的に探索
-      textNodes = textNodes.concat(extractTextNodes(node.children));
+      console.log("frame or group found, extracting children");
+      console.log(node.children);
+      if (node.children) {
+        const childTextNodes = extractTextNodes(node.children);
+        textNodes = textNodes.concat(childTextNodes);
+      }
     }
   }
   return textNodes;
@@ -75,7 +93,7 @@ const placeEmojis = async (detectedEmotions) => {
     const emoji = figma.createText();
     await figma.loadFontAsync({ family: "Inter", style: "Regular" });
     emoji.characters = emotion.type === 'positive' ? '😊' : '😣';
-    emoji.fontSize = 28;
+    emoji.fontSize = 48;
 
     // 位置調整
     const nodeBounds = targetNode.absoluteBoundingBox;
@@ -83,7 +101,7 @@ const placeEmojis = async (detectedEmotions) => {
 
     // テキスト内の位置から絶対位置を計算
     emoji.x = nodeBounds.x + 10;
-    emoji.y = nodeBounds.y - 30;
+    emoji.y = nodeBounds.y - 60;
 
     figma.currentPage.appendChild(emoji);
   }
