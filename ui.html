@@ -1,0 +1,64 @@
+<style>
+    body {
+      font-family: Inter, sans-serif;
+      padding: 20px;
+    }
+    button {
+      background-color: #2D9CDB;
+      border: none;
+      color: white;
+      padding: 8px 16px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-weight: 500;
+    }
+    .result {
+      margin-top: 16px;
+      display: none;
+    }
+  </style>
+  
+  <div id="app">
+    <h3>感情分析プラグイン</h3>
+    <p>テキストを選択して感情分析を実行します。</p>
+    
+    <button id="analyze-btn">分析を実行</button>
+    
+    <div id="result" class="result">
+      <p>検出結果:</p>
+      <p>ポジティブ感情: <span id="positive-count">0</span>個</p>
+      <p>ネガティブ感情: <span id="negative-count">0</span>個</p>
+    </div>
+  </div>
+  
+  <script>
+    document.getElementById('analyze-btn').onclick = function() {
+      // 親ウィンドウにメッセージを送信
+      parent.postMessage({ pluginMessage: { type: 'analyze-emotions' } }, '*');
+      
+      // ボタンの状態を更新
+      this.textContent = '分析中...';
+      this.disabled = true;
+    };
+    
+    // 親からのメッセージを受信
+    window.onmessage = function(event) {
+      const message = event.data.pluginMessage;
+      
+      if (message.type === 'analysis-complete') {
+        document.getElementById('analyze-btn').textContent = '分析を実行';
+        document.getElementById('analyze-btn').disabled = false;
+        
+        // 結果の表示
+        document.getElementById('positive-count').textContent = message.count.positive;
+        document.getElementById('negative-count').textContent = message.count.negative;
+        document.getElementById('result').style.display = 'block';
+      }
+      
+      if (message.type === 'error') {
+        alert(message.message);
+        document.getElementById('analyze-btn').textContent = '分析を実行';
+        document.getElementById('analyze-btn').disabled = false;
+      }
+    };
+  </script>
